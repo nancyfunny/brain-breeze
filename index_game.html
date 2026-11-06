@@ -20,9 +20,9 @@ h2{font:600 1.45rem/1.2 var(--disp);margin:0;text-wrap:balance}
 p{margin:0}.mute{color:var(--mute)}
 .stage{position:relative;height:380px;transition:height .3s}
 body.playing .stage{height:200px}body.playing .sub{display:none}body.playing h1{font-size:1.7rem}
-body.playing .bubble{top:50%;transform:translateY(-50%)}
-#mascot{width:100%;height:100%;display:block}
-.bubble{position:absolute;top:6px;left:calc(50% + 50px);max-width:calc(50% - 50px);background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:8px 14px;font:600 1rem/1.3 var(--disp);box-shadow:0 4px 0 var(--ink)}
+body.playing .bubble{top:0;left:calc(50% + 30px);max-width:calc(50% - 30px)}
+#mascot{width:100%;height:100%;display:block;filter:contrast(1.15) saturate(1.25)}
+.bubble{position:absolute;top:24%;left:calc(50% + 40px);max-width:calc(50% - 40px);background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:8px 14px;font:600 1rem/1.3 var(--disp);box-shadow:0 4px 0 var(--ink)}
 .bubble::after{content:"";position:absolute;left:18px;bottom:-12px;width:16px;height:16px;background:var(--card);border:3px solid var(--ink);border-top:0;border-left:0;transform:rotate(45deg)}
 .pop{animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
 @keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
@@ -74,7 +74,8 @@ ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
 .tile.sel::after,.tile.right::after{content:"✓";position:absolute;top:-10px;left:-10px;width:28px;height:28px;border-radius:50%;background:#3a86ff;color:#fff;font:700 16px/24px var(--disp);text-align:center;border:2.5px solid var(--ink)}
 .tile.right::after{background:var(--mint)}
 .tile.miss{border:3px dashed var(--mint);background:#e3fff2}
-.opt{min-height:60px;box-shadow:0 4px 0 var(--ink)}
+.opt{min-height:60px;padding-inline:1.5em;box-shadow:0 4px 0 var(--ink)}
+.tiles.wide{padding:10px}
 .big{background:var(--card)}
 .robot{width:100%;justify-content:flex-start;gap:14px;padding:14px 16px;text-align:left}
 .robot small{margin-left:auto;font:500 .75rem/1.2 var(--disp);color:var(--mute);text-align:right}
@@ -100,22 +101,30 @@ const M=(()=>{const api={mood(){},burst(){},grow(){}},cv=document.getElementById
 if(!window.THREE)return api;let R;try{R=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true})}catch(e){return api}
 const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(35,1,.1,50);C.position.set(0,.2,7);
-S.add(new THREE.HemisphereLight(0xfff8fb,0xe6dcf5,.85));const L=new THREE.DirectionalLight(0xffffff,.3);L.position.set(1.5,3,4);S.add(L);
-const matte=c=>new THREE.MeshStandardMaterial({color:c,roughness:1}),COLS=[0xffd84d,0x1fb87c,0x5fa8ff,0xff4f9e,0xb58cff].map(matte);
+// UK 10am light: pale warm sun low from the left, warm pink sky fill, faint cool bounce from lower right
+S.add(new THREE.HemisphereLight(0xffe6ef,0xf7e4e8,.72));const sun=new THREE.DirectionalLight(0xfff0da,.75);sun.position.set(-3.5,2.2,3);S.add(sun);
+const bounce=new THREE.DirectionalLight(0xe6eeff,.12);bounce.position.set(3,-1,2);S.add(bounce);const matte=c=>new THREE.MeshStandardMaterial({color:c,roughness:1}),COLS=[0xffd84d,0x1fb87c,0x5fa8ff,0xff4f9e,0xb58cff].map(matte);
 // Short, dense plush fur: thin shells with crisp random hair tips
 const N=256,fc=document.createElement("canvas");fc.width=fc.height=N;const fx=fc.getContext("2d"),img=fx.createImageData(N,N);
-for(let i=0;i<N*N;i++){const v=Math.random()<.85?Math.random()*255|0:0;img.data.set([v,v,v,255],i*4)}fx.putImageData(img,0,0);
-const furTex=new THREE.CanvasTexture(fc);furTex.wrapS=furTex.wrapT=THREE.RepeatWrapping;furTex.repeat.set(4,2);
-furTex.magFilter=furTex.minFilter=THREE.NearestFilter;furTex.generateMipmaps=false;
-const ROOT=0xe39ab8,TIP=0xf7d3e1;
-function plush(geo,len,layers){const g=new THREE.Group();g.add(new THREE.Mesh(geo,matte(ROOT)));
-for(let i=1;i<=layers;i++){const k=i/layers,m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(ROOT).lerp(new THREE.Color(TIP),k),roughness:1,alphaMap:furTex,alphaTest:.05+k*.85}));
+for(let i=0;i<N*N;i++){const v=Math.random()<.9?90+Math.random()*165|0:0;img.data.set([v,v,v,255],i*4)}fx.putImageData(img,0,0);
+// Blur the hair pattern a little so tips melt together like velvety plush, not sharp spikes
+const sc=document.createElement("canvas");sc.width=sc.height=N;const sx=sc.getContext("2d");sx.filter="blur(1.2px)";sx.drawImage(fc,0,0);
+const furTex=new THREE.CanvasTexture(sc);furTex.wrapS=furTex.wrapT=THREE.RepeatWrapping;furTex.repeat.set(6,3);
+furTex.magFilter=furTex.minFilter=THREE.LinearFilter;furTex.generateMipmaps=false;
+// Fur shades only between the chosen highlight and shadow pinks; hair tips cut out by the fur pattern
+const shade={hi:{value:new THREE.Color("#F6D6E9")},lo:{value:new THREE.Color("#D296B1")},sun:{value:new THREE.Vector3(-3.5,2.2,3).normalize()},
+bDir:{value:new THREE.Vector3(3,-1,2).normalize()},bCol:{value:new THREE.Color(0xe6eeff)},bAmt:{value:.12},tex:{value:furTex}};
+function furMat(k){return new THREE.ShaderMaterial({uniforms:{...shade,cut:{value:.05+k*.85},depth:{value:.96+.04*Math.max(k,0)}},
+vertexShader:"varying vec3 vN;varying vec2 vUv;void main(){vN=normalize(normalMatrix*normal);vUv=uv*vec2(6.,3.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+fragmentShader:"uniform vec3 hi,lo,sun,bDir,bCol;uniform float bAmt,cut,depth;uniform sampler2D tex;varying vec3 vN;varying vec2 vUv;void main(){float h=texture2D(tex,vUv).g;if(h<cut)discard;vec3 n=normalize(vN);float l=smoothstep(.15,.85,dot(n,sun)*.5+.5);vec3 c=mix(lo,hi,l)*depth*(.95+.06*h);c=mix(c,bCol,bAmt*max(dot(n,bDir),0.));gl_FragColor=vec4(c,1.);}"})}
+function plush(geo,len,layers){const g=new THREE.Group();g.add(new THREE.Mesh(geo,furMat(-1)));
+for(let i=1;i<=layers;i++){const k=i/layers,m=new THREE.Mesh(geo,furMat(k));
 m.scale.setScalar(1+k*len);g.add(m)}return g}
 const G=new THREE.Group();G.scale.setScalar(.95);S.add(G);const B=new THREE.Group();G.add(B);
 // Bean body that sits flat, stubby arms and feet
 const body=new THREE.SphereGeometry(1,64,40),p=body.attributes.position;
 for(let i=0;i<p.count;i++){let y=p.getY(i);if(y<-.55)y=-.55+(y+.55)*.35;p.setXYZ(i,p.getX(i)*1.06,y*.95,p.getZ(i)*.98)}body.computeVertexNormals();
-B.add(plush(body,.05,18));const nub=new THREE.SphereGeometry(.24,24,16),arms=[];
+B.add(plush(body,.04,18));const nub=new THREE.SphereGeometry(.24,24,16),arms=[];
 [-1,1].forEach(s=>{const a=plush(nub,.18,10);a.scale.set(.8,1.1,.8);a.position.set(1*s,-.2,.25);a.rotation.z=-.5*s;B.add(a);arms.push(a);
 const f=plush(nub,.18,10);f.scale.set(1,.7,1.25);f.position.set(.42*s,-.64,.55);B.add(f)});
 // Embroidered face: bead eyes, stitched mouth, felt cheeks
@@ -202,13 +211,13 @@ view(cap("Remember","the pictures and where they are",`<div class="tiles" ${cols
 function nextFocus(){step(2);const i=S.fr.length;if(i>=FOCUS_Q)return nextMath();if(!i){M.mood("idle");say("Colour, not the word!")}
 const [word,ink]=S.focus[i];S.ans=ink[0];S.t=Date.now();
 view(cap(`Focus · ${i+1} / ${FOCUS_Q}`,"the INK colour of this word",`<div class="big" style="color:${ink[1]}">${word[0]}</div>
-<div class="tiles" ${cols(3)}>${COLORS.map(c=>`<button class="opt" onclick="focusAns(this,'${c[0]}')"><span class="dot" style="background:${c[1]}"></span>${c[0].toLowerCase()}</button>`).join("")}</div>`,pips(S.fr,FOCUS_Q)))}
+<div class="tiles wide" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">${COLORS.map(c=>`<button class="opt" onclick="focusAns(this,'${c[0]}')"><span class="dot" style="background:${c[1]}"></span>${c[0].toLowerCase()}</button>`).join("")}</div>`,pips(S.fr,FOCUS_Q)))}
 function focusAns(b,c){const ok=c===S.ans;S.ms+=Date.now()-S.t;S.fr.push(ok?1:0);react(b,ok);setTimeout(nextFocus,450)}
 
 function nextMath(){step(3);const i=S.mr.length;if(i>=MATH_Q)return recallWhere();if(!i){M.mood("idle");say("Switch! Quick maths!")}
 const a=2+(Math.random()*8|0),b=2+(Math.random()*8|0),r=a+b;S.ans=r;
 view(cap(`Switch · ${i+1} / ${MATH_Q}`,"the right answer",`<div class="big">${a} + ${b} = ?</div>
-<div class="tiles" ${cols(2)}>${shuffle([r,r+1,r-1,r+2]).map(o=>`<button class="opt" onclick="mathAns(this,${o})">${o}</button>`).join("")}</div>`,pips(S.mr,MATH_Q)))}
+<div class="tiles wide" ${cols(2)}>${shuffle([r,r+1,r-1,r+2]).map(o=>`<button class="opt" onclick="mathAns(this,${o})">${o}</button>`).join("")}</div>`,pips(S.mr,MATH_Q)))}
 function mathAns(b,o){const ok=o===S.ans;S.mr.push(ok?1:0);react(b,ok);setTimeout(nextMath,450)}
 function react(b,ok){app.querySelectorAll(".tiles button").forEach(x=>x.disabled=true);b.classList.add(ok?"right":"wrong");M.mood(ok?"happy":"sad");say(any(ok?YES:OOPS))}
 
