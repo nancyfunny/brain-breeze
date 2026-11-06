@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brainrot Rescue</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+body{margin:0}[hidden]{display:none!important}img{max-width:100%}
+/* Layout: one play card, step strip on top, big tap targets; each screen shows what to do, not tells */
+:root{--bg:#eaf6f0;--card:#fff;--ink:#16213a;--mute:#5b6b7f;--pop:#ff3d8b;--sun:#ffd23f;--ok:#1f9d6b;--bad:#d64045;
+--disp:"Bricolage Grotesque",system-ui,sans-serif;--body:"Atkinson Hyperlegible",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1626;--card:#18223a;--ink:#eef3ff;--mute:#9aa8c0;--pop:#ff5fa0;--ok:#3ccf91;--bad:#ff6b70;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1626;--card:#18223a;--ink:#eef3ff;--mute:#9aa8c0;--pop:#ff5fa0;--ok:#3ccf91;--bad:#ff6b70;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:17px/1.5 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px}
+main{max-width:560px;margin:0 auto;display:grid;gap:16px}
+h1{font:800 clamp(2rem,7vw,2.8rem)/1 var(--disp);margin:0}
+h1 span{background:var(--sun);color:#16213a;padding:0 .2em;border-radius:6px;display:inline-block;transform:rotate(-2deg)}
+h2{font:700 1.45rem/1.2 var(--disp);margin:0;text-wrap:balance}
+.card{background:var(--card);border:2px solid var(--ink);border-radius:18px;padding:22px;box-shadow:6px 6px 0 var(--ink);display:grid;gap:14px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps b{font:700 .72rem var(--body);letter-spacing:.05em;text-transform:uppercase;text-align:center;padding:6px 4px;border-radius:99px;border:1.5px solid var(--mute);color:var(--mute)}
+.steps b.on{background:var(--pop);border-color:var(--pop);color:#fff}.steps b.done{border-color:var(--ok);color:var(--ok)}
+p{margin:0}.mute{color:var(--mute)}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font:700 .8rem var(--body);background:var(--bg);border-radius:99px;padding:4px 12px;font-variant-numeric:tabular-nums}
+button{font:700 1.05rem var(--body);color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:12px;padding:12px 16px;cursor:pointer;min-height:52px;display:flex;align-items:center;justify-content:center;gap:8px}
+button:focus-visible{outline:3px solid var(--pop);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+button.go{background:var(--pop);border-color:var(--pop);color:#fff}
+button.sel{background:var(--sun);color:#16213a}
+button.right{background:var(--ok);border-color:var(--ok);color:#fff;opacity:1}
+button.wrong{background:var(--bad);border-color:var(--bad);color:#fff;opacity:1}
+.dot{width:18px;height:18px;border-radius:50%;flex:none;border:2px solid var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.how{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.how div{background:var(--bg);border-radius:12px;padding:12px;display:grid;gap:4px}
+.how strong{font:800 1.05rem var(--disp)}.how small{color:var(--mute)}
+.demo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);border-radius:12px;padding:10px 14px}
+.demo b{font:800 1.4rem var(--disp)}
+.words{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.words span{font:800 1.5rem var(--disp);padding:8px 14px;border-radius:12px;background:var(--bg)}
+.big{font:800 3.2rem/1 var(--disp);text-align:center;padding:14px 0;letter-spacing:.02em}
+.bar{height:10px;background:var(--bg);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pop)}
+.pips{display:flex;gap:6px}.pips i{width:12px;height:12px;border-radius:50%;background:var(--bg);border:1.5px solid var(--mute)}
+.pips i.r{background:var(--ok);border-color:var(--ok)}.pips i.w{background:var(--bad);border-color:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;text-align:center}
+.stats div{background:var(--bg);border-radius:12px;padding:10px}.stats strong{display:block;font:800 1.6rem var(--disp);font-variant-numeric:tabular-nums}
+.stats small{color:var(--mute);font-size:.8rem}
+ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Brainrot <span>Rescue</span></h1>
+  <p class="mute" style="font:400 1em var(--body);margin:-8px 0 12px">3 levels · 3 min · then stop</p>
+  <div class="steps" id="steps" hidden><b>Remember</b><b>Focus</b><b>Switch</b><b>Recall</b></div>
+  <section class="card" id="app"></section>
+</main>
+<script>
+const WORDS="apple river pencil cloud tiger window bread music candle forest rocket garden mirror ticket island hammer pocket camera bottle planet jacket ladder coffee button winter castle spoon dragon library pillow".split(" ");
+const COLORS=[["RED","#e63946"],["BLUE","#3a86ff"],["GREEN","#2a9d55"],["YELLOW","#e0a800"],["PURPLE","#9b5de5"],["ORANGE","#f77f00"]];
+const PRAISE=["Big brain move!","No cap, nice!","Focus level: legend","You ate that."];
+const LEVELS=3,FOCUS_Q=6,MATH_Q=3;
+const $=s=>document.getElementById(s),app=$("app");
+let lvl=1,S={},timer;
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+const pick=(a,n)=>shuffle(a).slice(0,n);
+const store=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+const best=()=>store("brBest")||0;
+// Colour questions come from one shuffled deck of all 36 word/ink pairs, kept across sessions,
+// so no question repeats until every pair has been used once.
+function drawFocus(){let deck=store("brDeck");if(!Array.isArray(deck)||deck.length<FOCUS_Q){deck=shuffle([...Array(36).keys()])}
+const out=deck.splice(0,FOCUS_Q);store("brDeck",deck);return out.map(i=>[COLORS[i/6|0],COLORS[i%6]])}
+function step(n){$("steps").hidden=n<1||n>4;[...$("steps").children].forEach((b,i)=>{b.className=i===n-1?"on":i<n-1?"done":""})}
+function view(h){app.innerHTML=h}
+function head(label,count){return `<div class="row"><span class="tag">Level ${lvl} / ${LEVELS}</span>${count?`<span class="tag">${count}</span>`:""}</div><h2>${label}</h2>`}
+function pips(res,n){return `<div class="pips">${Array.from({length:n},(_,i)=>`<i class="${res[i]===1?"r":res[i]===0?"w":""}"></i>`).join("")}</div>`}
+function countdown(sec,done){const t0=Date.now();clearInterval(timer);timer=setInterval(()=>{const left=sec-(Date.now()-t0)/1000,bar=app.querySelector(".bar i"),t=$("secs");
+if(bar)bar.style.width=Math.max(0,left/sec*100)+"%";if(t)t.textContent=Math.ceil(Math.max(0,left))+"s";if(left<=0){clearInterval(timer);done()}},100)}
+
+function home(){step(0);lvl=1;view(`<div class="how">
+<div><strong>1 Remember</strong><small>Read some words</small></div>
+<div><strong>2 Focus</strong><small>Tap the ink colour</small></div>
+<div><strong>3 Switch</strong><small>Do quick maths</small></div>
+<div><strong>4 Recall</strong><small>Find the words again</small></div></div>
+<div class="demo"><span class="mute">Example:</span><b style="color:#3a86ff">RED</b><span>→ tap</span><button tabindex="-1" style="pointer-events:none;min-height:40px;padding:6px 12px"><span class="dot" style="background:#3a86ff"></span>blue</button></div>
+<button class="go" onclick="start()">Start</button>`)}
+
+function start(){const n=3+lvl;S={words:pick(WORDS,n),focus:drawFocus(),fr:[],ms:0,mr:[]};step(1);
+view(`${head(`Remember these ${n} words`,'<span id="secs"></span>')}
+<div class="words">${S.words.map(w=>`<span>${w}</span>`).join("")}</div><div class="bar"><i style="width:100%"></i></div>`);
+countdown(4+n,nextFocus)}
+
+function nextFocus(){step(2);const i=S.fr.length;if(i>=FOCUS_Q)return nextMath();
+const [word,ink]=S.focus[i];S.ans=ink[0];S.t=Date.now();
+view(`${head("Tap the INK colour",`${i+1} / ${FOCUS_Q}`)}${pips(S.fr,FOCUS_Q)}
+<div class="big" style="color:${ink[1]}">${word[0]}</div>
+<div class="grid">${COLORS.map(c=>`<button onclick="focusAns(this,'${c[0]}')"><span class="dot" style="background:${c[1]}"></span>${c[0].toLowerCase()}</button>`).join("")}</div>`)}
+function focusAns(b,c){const ok=c===S.ans;S.ms+=Date.now()-S.t;S.fr.push(ok?1:0);lock(b,ok);setTimeout(nextFocus,400)}
+
+function nextMath(){step(3);const i=S.mr.length;if(i>=MATH_Q)return recall();
+const a=2+(Math.random()*8|0),b=2+(Math.random()*8|0),r=a+b;S.ans=r;
+view(`${head("Switch! Quick maths",`${i+1} / ${MATH_Q}`)}${pips(S.mr,MATH_Q)}
+<div class="big">${a} + ${b} = ?</div><div class="grid">${shuffle([r,r+1,r-1,r+2]).map(o=>`<button onclick="mathAns(this,${o})">${o}</button>`).join("")}</div>`)}
+function mathAns(b,o){const ok=o===S.ans;S.mr.push(ok?1:0);lock(b,ok);setTimeout(nextMath,400)}
+function lock(b,ok){app.querySelectorAll(".grid button").forEach(x=>x.disabled=true);b.classList.add(ok?"right":"wrong")}
+
+function recall(){step(4);const n=S.words.length,fakes=pick(WORDS.filter(w=>!S.words.includes(w)),n+2);
+view(`${head("Which words did you see?",`<span id="picked">0</span> / ${n} picked`)}
+<div class="grid">${shuffle([...S.words,...fakes]).map(w=>`<button onclick="toggle(this)">${w}</button>`).join("")}</div>
+<button class="go" id="check" disabled onclick="check()">Check</button>`)}
+function toggle(b){const n=S.words.length,on=app.querySelectorAll(".grid .sel").length;
+if(!b.classList.contains("sel")&&on>=n)return;b.classList.toggle("sel");const c=app.querySelectorAll(".grid .sel").length;$("picked").textContent=c;$("check").disabled=c!==n}
+function check(){let hit=0;app.querySelectorAll(".grid button").forEach(b=>{const seen=S.words.includes(b.textContent),sel=b.classList.contains("sel");
+if(sel&&seen)hit++;b.disabled=true;if(seen)b.classList.add("right");else if(sel)b.classList.add("wrong")});
+const mem=Math.round(hit/S.words.length*100),foc=Math.round(S.fr.filter(Boolean).length/FOCUS_Q*100),avg=(S.ms/FOCUS_Q/1000).toFixed(1);
+const score=mem+foc+S.mr.filter(Boolean).length*10;if(score>best())store("brBest",score);
+const last=lvl>=LEVELS;$("check").remove();app.insertAdjacentHTML("beforeend",`<h2>${PRAISE[Math.random()*4|0]}</h2>
+<div class="stats"><div><strong>${mem}%</strong><small>Memory</small></div><div><strong>${foc}%</strong><small>Focus</small></div><div><strong>${avg}s</strong><small>Per colour</small></div></div>
+${mem<60?'<p class="mute">Tip: say the words again in your head 2–3 times while you look at them.</p>':""}
+<button class="go" onclick="${last?"thanks()":"lvl++;start()"}">${last?"Finish":`Level ${lvl+1} →`}</button>`)}
+
+function thanks(){step(5);view(`<h2>Done! Your brain is awake.</h2>
+<p>3 levels is enough for today. Use this focus now.</p>
+<ul><li>Rest your eyes for 1 minute</li><li>Drink some water</li><li>Start one real task, phone away</li><li>Come back tomorrow</li></ul>
+<button onclick="home()">Back to start</button>`)}
+home();
+</script>
+</body>
+</html>
