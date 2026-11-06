@@ -103,38 +103,43 @@ const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(35,1,.1,50);C.position.set(0,.2,7);
 // UK 10am light: pale warm sun low from the left, warm pink sky fill, faint cool bounce from lower right
 S.add(new THREE.HemisphereLight(0xffe6ef,0xf7e4e8,.72));const sun=new THREE.DirectionalLight(0xfff0da,.75);sun.position.set(-3.5,2.2,3);S.add(sun);
-const bounce=new THREE.DirectionalLight(0xe6eeff,.12);bounce.position.set(3,-1,2);S.add(bounce);const matte=c=>new THREE.MeshStandardMaterial({color:c,roughness:1}),COLS=[0xffd84d,0x1fb87c,0x5fa8ff,0xff4f9e,0xb58cff].map(matte);
-// Short, dense plush fur: thin shells with crisp random hair tips
-const N=256,fc=document.createElement("canvas");fc.width=fc.height=N;const fx=fc.getContext("2d"),img=fx.createImageData(N,N);
-for(let i=0;i<N*N;i++){const v=Math.random()<.9?90+Math.random()*165|0:0;img.data.set([v,v,v,255],i*4)}fx.putImageData(img,0,0);
-// Blur the hair pattern a little so tips melt together like velvety plush, not sharp spikes
-const sc=document.createElement("canvas");sc.width=sc.height=N;const sx=sc.getContext("2d");sx.filter="blur(1.2px)";sx.drawImage(fc,0,0);
-const furTex=new THREE.CanvasTexture(sc);furTex.wrapS=furTex.wrapT=THREE.RepeatWrapping;furTex.repeat.set(6,3);
-furTex.magFilter=furTex.minFilter=THREE.LinearFilter;furTex.generateMipmaps=false;
-// Fur shades only between the chosen highlight and shadow pinks; hair tips cut out by the fur pattern
-const shade={hi:{value:new THREE.Color("#F6D6E9")},lo:{value:new THREE.Color("#D296B1")},sun:{value:new THREE.Vector3(-3.5,2.2,3).normalize()},
-bDir:{value:new THREE.Vector3(3,-1,2).normalize()},bCol:{value:new THREE.Color(0xe6eeff)},bAmt:{value:.12},tex:{value:furTex}};
-function furMat(k){return new THREE.ShaderMaterial({uniforms:{...shade,cut:{value:.05+k*.85},depth:{value:.96+.04*Math.max(k,0)}},
-vertexShader:"varying vec3 vN;varying vec2 vUv;void main(){vN=normalize(normalMatrix*normal);vUv=uv*vec2(6.,3.);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
-fragmentShader:"uniform vec3 hi,lo,sun,bDir,bCol;uniform float bAmt,cut,depth;uniform sampler2D tex;varying vec3 vN;varying vec2 vUv;void main(){float h=texture2D(tex,vUv).g;if(h<cut)discard;vec3 n=normalize(vN);float l=smoothstep(.15,.85,dot(n,sun)*.5+.5);vec3 c=mix(lo,hi,l)*depth*(.95+.06*h);c=mix(c,bCol,bAmt*max(dot(n,bDir),0.));gl_FragColor=vec4(c,1.);}"})}
-function plush(geo,len,layers){const g=new THREE.Group();g.add(new THREE.Mesh(geo,furMat(-1)));
-for(let i=1;i<=layers;i++){const k=i/layers,m=new THREE.Mesh(geo,furMat(k));
-m.scale.setScalar(1+k*len);g.add(m)}return g}
+const bounce=new THREE.DirectionalLight(0xe6eeff,.12);bounce.position.set(3,-1,2);S.add(bounce);
+const matte=c=>new THREE.MeshStandardMaterial({color:c,roughness:1}),COLS=[0xffd84d,0x1fb87c,0x5fa8ff,0xff4f9e,0xb58cff].map(matte);
+// Long, fine plush fur pattern (soft-render look)
+const N=256,fa=document.createElement("canvas");fa.width=fa.height=N;const fx=fa.getContext("2d"),img=fx.createImageData(N,N);
+for(let i=0;i<N*N;i++){const v=Math.random()<.92?90+Math.random()*165|0:0;img.data.set([v,v,v,255],i*4)}fx.putImageData(img,0,0);
+const fb=document.createElement("canvas");fb.width=fb.height=N;const fy=fb.getContext("2d");fy.filter="blur(.6px)";fy.drawImage(fa,0,0);
+const furTex=new THREE.CanvasTexture(fb);furTex.wrapS=furTex.wrapT=THREE.RepeatWrapping;furTex.magFilter=furTex.minFilter=THREE.LinearFilter;furTex.generateMipmaps=false;
+const SUN=new THREE.Vector3(-3.5,2.2,3).normalize(),BD=new THREE.Vector3(3,-1,2).normalize();
+// Every soft surface shades only between a chosen highlight and shadow colour, plus rim sheen and the cool bounce
+function softMat(o){return new THREE.ShaderMaterial({uniforms:{hi:{value:new THREE.Color(o.hi||"#F6D6E9")},lo:{value:new THREE.Color(o.lo||"#D296B1")},sun:{value:SUN},bDir:{value:BD},
+bCol:{value:new THREE.Color(0xe6eeff)},bAmt:{value:.12},tex:{value:furTex},rep:{value:new THREE.Vector2(12,6)},cut:{value:o.cut??-1},depth:{value:o.depth??1},rim:{value:o.rim||0}},
+vertexShader:"uniform vec2 rep;varying vec3 vN,vV;varying vec2 vUv;void main(){vN=normalize(normalMatrix*normal);vec4 mv=modelViewMatrix*vec4(position,1.);vV=normalize(-mv.xyz);vUv=uv*rep;gl_Position=projectionMatrix*mv;}",
+fragmentShader:"uniform vec3 hi,lo,sun,bDir,bCol;uniform float bAmt,cut,depth,rim;uniform sampler2D tex;varying vec3 vN,vV;varying vec2 vUv;void main(){float h=1.;if(cut>-.5){h=texture2D(tex,vUv).g;if(h<cut)discard;}vec3 n=normalize(vN);float l=smoothstep(.15,.85,dot(n,sun)*.5+.5);vec3 c=mix(lo,hi,l)*depth*(.95+.06*h);c=mix(c,bCol,bAmt*max(dot(n,bDir),0.));c+=rim*pow(1.-max(dot(n,normalize(vV)),0.),2.5)*vec3(1.,.94,.97);gl_FragColor=vec4(c,1.);}"})}
+const LAYERS=30;
+function fluffy(geo,len){const g=new THREE.Group();g.add(new THREE.Mesh(geo,softMat({depth:.95})));
+for(let i=1;i<=LAYERS;i++){const k=i/LAYERS,m=new THREE.Mesh(geo,softMat({cut:.05+k*.85,depth:.95+.05*k,rim:.22*k}));m.scale.setScalar(1+k*len);g.add(m)}return g}
 const G=new THREE.Group();G.scale.setScalar(.95);S.add(G);const B=new THREE.Group();G.add(B);
 // Bean body that sits flat, stubby arms and feet
-const body=new THREE.SphereGeometry(1,64,40),p=body.attributes.position;
-for(let i=0;i<p.count;i++){let y=p.getY(i);if(y<-.55)y=-.55+(y+.55)*.35;p.setXYZ(i,p.getX(i)*1.06,y*.95,p.getZ(i)*.98)}body.computeVertexNormals();
-B.add(plush(body,.04,18));const nub=new THREE.SphereGeometry(.24,24,16),arms=[];
-[-1,1].forEach(s=>{const a=plush(nub,.18,10);a.scale.set(.8,1.1,.8);a.position.set(1*s,-.2,.25);a.rotation.z=-.5*s;B.add(a);arms.push(a);
-const f=plush(nub,.18,10);f.scale.set(1,.7,1.25);f.position.set(.42*s,-.64,.55);B.add(f)});
-// Embroidered face: bead eyes, stitched mouth, felt cheeks
-const face=new THREE.Group();face.position.z=.05;B.add(face);const eyes=[];
-[-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.075,20,14),new THREE.MeshStandardMaterial({color:0x221a2b,roughness:.15}));e.position.set(.27*s,.12,.97);face.add(e);eyes.push(e);
-const h=new THREE.Mesh(new THREE.SphereGeometry(.02,8,6),new THREE.MeshBasicMaterial({color:0xffffff}));h.position.set(.025,.03,.06);e.add(h);
-const b=new THREE.Mesh(new THREE.CircleGeometry(.11,24),new THREE.MeshBasicMaterial({color:0xe0779f,transparent:true,opacity:.4}));b.position.set(.48*s,-.04,.93);b.rotation.y=.5*s;face.add(b)});
-const mouth=new THREE.Mesh(new THREE.TorusGeometry(.07,.016,8,20,Math.PI),matte(0x3b2a35));mouth.position.set(0,-.04,1.02);mouth.rotation.z=Math.PI;face.add(mouth);
-// Felt sprout grows each level
-const sprout=new THREE.Group(),felt=matte(0x9cc9a6);sprout.position.y=.98;B.add(sprout);
+const BEAN=[1.06,.95,.98],LEN=.16,body=new THREE.SphereGeometry(1,64,40),p=body.attributes.position;
+for(let i=0;i<p.count;i++){let y=p.getY(i);if(y<-.55)y=-.55+(y+.55)*.35;p.setXYZ(i,p.getX(i)*BEAN[0],y*BEAN[1],p.getZ(i)*BEAN[2])}body.computeVertexNormals();
+B.add(fluffy(body,LEN));const nub=new THREE.SphereGeometry(.24,24,16),arms=[];
+[-1,1].forEach(s=>{const a=fluffy(nub,LEN*2.2);a.scale.set(.8,1.1,.8);a.position.set(1*s,-.2,.25);a.rotation.z=-.5*s;B.add(a);arms.push(a);
+const f=fluffy(nub,LEN*2.2);f.scale.set(1,.7,1.25);f.position.set(.42*s,-.64,.55);B.add(f)});
+// Soft contact shadow
+const sc=document.createElement("canvas");sc.width=sc.height=128;const sx=sc.getContext("2d"),gr=sx.createRadialGradient(64,64,0,64,64,64);
+gr.addColorStop(0,"rgba(120,60,100,.35)");gr.addColorStop(.2,"rgba(120,60,100,.21)");gr.addColorStop(1,"rgba(120,60,100,0)");sx.fillStyle=gr;sx.fillRect(0,0,128,128);
+const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=-.88;G.add(shadow);
+// Kawaii face on top of the fur: big sparkly eyes, "ω" smile, oval blush
+const r=1+LEN+.01,on=(x,y)=>new THREE.Vector3(x*BEAN[0],y*BEAN[1],Math.sqrt(1-x*x-y*y)*BEAN[2]).multiplyScalar(r);
+const eyes=[],mouths=[];
+[-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.11,24,16),new THREE.MeshStandardMaterial({color:0x221a2b,roughness:.1}));e.position.copy(on(.3*s,.08));B.add(e);eyes.push(e);
+const h1=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshBasicMaterial({color:0xffffff}));h1.position.set(.035,.04,.09);e.add(h1);
+const h2=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),new THREE.MeshBasicMaterial({color:0xffffff}));h2.position.set(-.035,-.04,.09);e.add(h2);
+const b=new THREE.Mesh(new THREE.CircleGeometry(.12,28),new THREE.MeshBasicMaterial({color:0xe0779f,transparent:true,opacity:.4}));b.scale.y=.62;b.position.copy(on(.5*s,-.12));b.lookAt(b.position.clone().multiplyScalar(2));B.add(b);
+const m=new THREE.Mesh(new THREE.TorusGeometry(.05,.016,8,20,Math.PI),matte(0x3b2a35));m.position.copy(on(.05*s,-.14));m.rotation.z=Math.PI;B.add(m);mouths.push(m)});
+// Soft felt sprout grows each level
+const sprout=new THREE.Group(),felt=softMat({hi:"#B2D8BB",lo:"#9DC7A8"});sprout.position.y=BEAN[1]+LEN;B.add(sprout);
 const stem=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,.36,8),felt);stem.position.y=.18;sprout.add(stem);
 [-1,1].forEach(s=>{const l=new THREE.Mesh(new THREE.SphereGeometry(.18,16,12),felt);l.scale.set(1,.3,.62);l.position.set(.17*s,.38,0);l.rotation.z=.45*s;sprout.add(l)});
 // Floating candy confetti behind, and bursts on good answers
@@ -152,7 +157,7 @@ const sq=Math.sin(t*1.6)*.025-Math.sin(hop*Math.PI)*.06;B.scale.set(1+sq,1-sq,1+
 G.position.y=(mood==="sleepy"?-.1:0)+Math.sin(hop*Math.PI)*.55;G.position.x=Math.sin(t*45)*.15*shake;
 G.rotation.y+=(px*.35-G.rotation.y)*.06;G.rotation.x+=(py*.12-G.rotation.x)*.06;G.rotation.z=mood==="sleepy"?.18:Math.sin(t*.8)*.03;
 const ey=mood==="sleepy"?.15:blink>.3?.15:1;eyes.forEach(e=>e.scale.y+=(ey-e.scale.y)*.4);
-mouth.rotation.z+=((mood==="sad"?0:Math.PI)-mouth.rotation.z)*.15;mouth.scale.setScalar(mood==="sleepy"?.6:mood==="party"?1.4:1);
+mouths.forEach(m=>{m.rotation.z+=((mood==="sad"?0:Math.PI)-m.rotation.z)*.15;m.scale.setScalar(mood==="sleepy"?.6:mood==="party"?1.3:1)});
 const up=mood==="party"||hop>.2;arms.forEach((a,i)=>{const s=i?-1:1;a.rotation.z+=(s*(up?-1:.5)-a.rotation.z)*.2;a.position.y+=((up?.15:-.2)-a.position.y)*.2});
 grow+=(growT-grow)*.05;sprout.scale.setScalar(grow);sprout.rotation.z=Math.sin(t*1.8)*.08;
 deco.forEach((m,i)=>{m.rotation.x+=.01*m.userData.s;m.rotation.y+=.013*m.userData.s;m.position.y+=Math.sin(t*m.userData.s+i)*.002});
