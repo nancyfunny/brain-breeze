@@ -130,14 +130,16 @@ const f=fluffy(nub,LEN*2.2);f.scale.set(1,.7,1.25);f.position.set(.42*s,-.64,.55
 const sc=document.createElement("canvas");sc.width=sc.height=128;const sx=sc.getContext("2d"),gr=sx.createRadialGradient(64,64,0,64,64,64);
 gr.addColorStop(0,"rgba(120,60,100,.35)");gr.addColorStop(.2,"rgba(120,60,100,.21)");gr.addColorStop(1,"rgba(120,60,100,0)");sx.fillStyle=gr;sx.fillRect(0,0,128,128);
 const shadow=new THREE.Mesh(new THREE.PlaneGeometry(2.6,1.2),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(sc),transparent:true,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=-.88;G.add(shadow);
-// Kawaii face on top of the fur: big sparkly eyes, "ω" smile, oval blush
+// Kawaii face on top of the fur: big sparkly eyes, oval blush, "u" smile
 const r=1+LEN+.01,on=(x,y)=>new THREE.Vector3(x*BEAN[0],y*BEAN[1],Math.sqrt(1-x*x-y*y)*BEAN[2]).multiplyScalar(r);
 const eyes=[],mouths=[];
 [-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.11,24,16),new THREE.MeshStandardMaterial({color:0x221a2b,roughness:.1}));e.position.copy(on(.3*s,.08));B.add(e);eyes.push(e);
 const h1=new THREE.Mesh(new THREE.SphereGeometry(.035,10,8),new THREE.MeshBasicMaterial({color:0xffffff}));h1.position.set(.035,.04,.09);e.add(h1);
 const h2=new THREE.Mesh(new THREE.SphereGeometry(.018,8,6),new THREE.MeshBasicMaterial({color:0xffffff}));h2.position.set(-.035,-.04,.09);e.add(h2);
 const b=new THREE.Mesh(new THREE.CircleGeometry(.12,28),new THREE.MeshBasicMaterial({color:0xe0779f,transparent:true,opacity:.4}));b.scale.y=.62;b.position.copy(on(.5*s,-.12));b.lookAt(b.position.clone().multiplyScalar(2));B.add(b);
-const m=new THREE.Mesh(new THREE.TorusGeometry(.05,.016,8,20,Math.PI),matte(0x3b2a35));m.position.copy(on(.05*s,-.14));m.rotation.z=Math.PI;B.add(m);mouths.push(m)});
+});
+// Simple "u" smile, same as the no-fur mascot
+const mouth=new THREE.Mesh(new THREE.TorusGeometry(.07,.016,8,20,Math.PI),matte(0x3b2a35));mouth.position.copy(on(0,-.08));mouth.rotation.z=Math.PI;B.add(mouth);mouths.push(mouth);
 // Soft felt sprout grows each level
 const sprout=new THREE.Group(),felt=softMat({hi:"#B2D8BB",lo:"#9DC7A8"});sprout.position.y=BEAN[1]+LEN;B.add(sprout);
 const stem=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,.36,8),felt);stem.position.y=.18;sprout.add(stem);
