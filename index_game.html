@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brainrot Rescue</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: 3D jelly-brain mascot on top, chunky candy card below; one light candy look on purpose */
+:root{--bg:#d9ecff;--dot:#c3dfff;--card:#fff;--ink:#2b2350;--mute:#5d5585;--pink:#ff4f9e;--mint:#1fb87c;--lemon:#ffd84d;--bad:#f0525a;
+--disp:"Fredoka","Arial Rounded MT Bold",system-ui,sans-serif;--body:"Atkinson Hyperlegible",system-ui,sans-serif;color-scheme:light}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100vh;color:var(--ink);font:17px/1.5 var(--body);background:var(--bg) radial-gradient(var(--dot) 3px,transparent 3.5px) 0 0/28px 28px;
+padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:max(20px,env(safe-area-inset-top,0px)) 32px}
+main{max-width:560px;margin:0 auto;display:grid;gap:12px}
+h1{font:700 clamp(2.2rem,8vw,2.9rem)/1 var(--disp);margin:0;letter-spacing:-.01em}
+h1 span{color:var(--pink);display:inline-block;transform:rotate(-3deg)}
+.sub{margin:0;color:var(--mute)}
+h2{font:600 1.45rem/1.2 var(--disp);margin:0;text-wrap:balance}
+p{margin:0}.mute{color:var(--mute)}
+.stage{position:relative;height:380px;transition:height .3s}
+body.playing .stage{height:200px}body.playing .sub{display:none}body.playing h1{font-size:1.7rem}
+body.playing .bubble{top:50%;transform:translateY(-50%)}
+#mascot{width:100%;height:100%;display:block}
+.bubble{position:absolute;top:6px;left:calc(50% + 50px);max-width:calc(50% - 50px);background:var(--card);border:3px solid var(--ink);border-radius:20px;padding:8px 14px;font:600 1rem/1.3 var(--disp);box-shadow:0 4px 0 var(--ink)}
+.bubble::after{content:"";position:absolute;left:18px;bottom:-12px;width:16px;height:16px;background:var(--card);border:3px solid var(--ink);border-top:0;border-left:0;transform:rotate(45deg)}
+.pop{animation:pop .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes pop{from{transform:scale(.6)}to{transform:scale(1)}}
+.card{background:var(--card);border:3px solid var(--ink);border-radius:28px;padding:20px;box-shadow:0 8px 0 var(--ink);display:grid;gap:14px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps b{font:600 .8rem var(--disp);text-align:center;padding:5px 4px;border-radius:99px;border:2.5px solid var(--ink);background:var(--card)}
+.steps b.on{background:var(--pink);color:#fff}.steps b.done{background:var(--mint);color:#fff}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tag{font:600 .85rem var(--disp);background:var(--bg);border-radius:99px;padding:4px 12px;font-variant-numeric:tabular-nums}
+button{font:600 1.1rem var(--disp);color:var(--ink);background:var(--card);border:3px solid var(--ink);border-radius:18px;padding:10px 14px;cursor:pointer;min-height:56px;
+display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 5px 0 var(--ink);transition:transform .08s,box-shadow .08s}
+button:active:not(:disabled){transform:translateY(4px);box-shadow:0 1px 0 var(--ink)}
+button:focus-visible{outline:4px solid var(--lemon);outline-offset:2px}
+button:disabled{cursor:default;opacity:.5}
+button.go{background:var(--pink);color:#fff}
+button.sel{background:var(--lemon)}
+button.right{background:var(--mint);color:#fff;opacity:1}
+button.wrong{background:var(--bad);color:#fff;opacity:1}
+.dot{width:20px;height:20px;border-radius:50%;flex:none;border:2.5px solid var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px}
+.how{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.how div{background:var(--bg);border-radius:18px;padding:12px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;align-items:center}
+.how i{grid-row:span 2;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font:700 1.1rem var(--disp);font-style:normal;color:#fff;border:2.5px solid var(--ink)}
+.how strong{font:600 1.05rem var(--disp)}.how small{color:var(--mute)}
+.demo{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg);border-radius:18px;padding:10px 14px}
+.demo b{font:700 1.5rem var(--disp)}
+.words{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.words span{font:600 1.5rem var(--disp);padding:8px 16px;border-radius:16px;background:var(--lemon);border:2.5px solid var(--ink)}
+.words span:nth-child(even){transform:rotate(2deg)}.words span:nth-child(odd){transform:rotate(-2deg)}
+.big{font:700 3.4rem/1 var(--disp);text-align:center;padding:12px 0}
+.bar{height:14px;background:var(--bg);border-radius:9px;overflow:hidden;border:2.5px solid var(--ink)}
+.bar i{display:block;height:100%;background:repeating-linear-gradient(-45deg,var(--pink) 0 10px,#ff7fb9 10px 20px)}
+.pips{display:flex;gap:6px}.pips i{width:14px;height:14px;border-radius:50%;background:var(--bg);border:2.5px solid var(--ink)}
+.pips i.r{background:var(--mint)}.pips i.w{background:var(--bad)}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;text-align:center}
+.stats div{background:var(--bg);border-radius:18px;padding:10px}.stats strong{display:block;font:700 1.7rem var(--disp);font-variant-numeric:tabular-nums}
+.stats small{color:var(--mute);font-size:.8rem}
+ul{margin:0;padding-left:1.2em;display:grid;gap:4px}
+#app{display:grid;gap:12px}
+.cap{background:var(--card);border:3px solid var(--ink);border-radius:24px;overflow:hidden;box-shadow:0 8px 0 var(--ink)}
+.cap header{background:var(--pink);color:#fff;padding:14px 18px;display:grid}
+.cap header small{font:600 .9rem var(--disp);opacity:.9}.cap header strong{font:700 1.45rem/1.15 var(--disp);text-wrap:balance}
+.cap footer{display:flex;align-items:center;gap:10px;padding:12px 14px;border-top:3px solid var(--ink);flex-wrap:wrap}
+.cap footer .bar,.cap footer .pips{flex:1}.cap footer .go{margin-left:auto;min-height:48px;padding:6px 22px}
+.tiles{display:grid;gap:8px;padding:10px max(10px,calc((100% - 280px)/2));background:var(--bg)}
+.tile{aspect-ratio:1;min-height:0;padding:14%;border:2.5px solid var(--ink);border-radius:14px;background:var(--card);position:relative;box-shadow:none;transition:transform .12s}
+.tile svg{width:100%;height:100%;display:block}
+.tile.sel{transform:scale(.86);background:#fff3c4}
+.tile.sel::after,.tile.right::after{content:"✓";position:absolute;top:-10px;left:-10px;width:28px;height:28px;border-radius:50%;background:#3a86ff;color:#fff;font:700 16px/24px var(--disp);text-align:center;border:2.5px solid var(--ink)}
+.tile.right::after{background:var(--mint)}
+.tile.miss{border:3px dashed var(--mint);background:#e3fff2}
+.opt{min-height:60px;box-shadow:0 4px 0 var(--ink)}
+.big{background:var(--card)}
+.robot{width:100%;justify-content:flex-start;gap:14px;padding:14px 16px;text-align:left}
+.robot small{margin-left:auto;font:500 .75rem/1.2 var(--disp);color:var(--mute);text-align:right}
+.box{width:32px;height:32px;flex:none;border:3px solid var(--ink);border-radius:8px;background:var(--card);display:grid;place-items:center;color:#fff;font:700 20px var(--disp)}
+.box.spin{border-radius:50%;border-color:var(--pink) transparent var(--pink) transparent;animation:spin .7s linear infinite}
+.box.ok{background:var(--mint)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Brainrot <span>Rescue</span></h1>
+  <p class="sub">3 levels · 3 min · then stop</p>
+  <div class="stage"><canvas id="mascot" aria-hidden="true"></canvas><p class="bubble" id="bubble" aria-live="polite"></p></div>
+  <div class="steps" id="steps" hidden><b>Remember</b><b>Focus</b><b>Switch</b><b>Recall</b></div>
+  <section id="app"></section>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---------- 3D mascot: a squishy jelly brain that wakes up and grows a sprout as you play ----------
+const M=(()=>{const api={mood(){},burst(){},grow(){}},cv=document.getElementById("mascot");
+if(!window.THREE)return api;let R;try{R=new THREE.WebGLRenderer({canvas:cv,alpha:true,antialias:true})}catch(e){return api}
+const calm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(35,1,.1,50);C.position.set(0,.2,7);
+S.add(new THREE.HemisphereLight(0xfff8fb,0xe6dcf5,.85));const L=new THREE.DirectionalLight(0xffffff,.3);L.position.set(1.5,3,4);S.add(L);
+const matte=c=>new THREE.MeshStandardMaterial({color:c,roughness:1}),COLS=[0xffd84d,0x1fb87c,0x5fa8ff,0xff4f9e,0xb58cff].map(matte);
+// Short, dense plush fur: thin shells with crisp random hair tips
+const N=256,fc=document.createElement("canvas");fc.width=fc.height=N;const fx=fc.getContext("2d"),img=fx.createImageData(N,N);
+for(let i=0;i<N*N;i++){const v=Math.random()<.85?Math.random()*255|0:0;img.data.set([v,v,v,255],i*4)}fx.putImageData(img,0,0);
+const furTex=new THREE.CanvasTexture(fc);furTex.wrapS=furTex.wrapT=THREE.RepeatWrapping;furTex.repeat.set(4,2);
+furTex.magFilter=furTex.minFilter=THREE.NearestFilter;furTex.generateMipmaps=false;
+const ROOT=0xe39ab8,TIP=0xf7d3e1;
+function plush(geo,len,layers){const g=new THREE.Group();g.add(new THREE.Mesh(geo,matte(ROOT)));
+for(let i=1;i<=layers;i++){const k=i/layers,m=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({color:new THREE.Color(ROOT).lerp(new THREE.Color(TIP),k),roughness:1,alphaMap:furTex,alphaTest:.05+k*.85}));
+m.scale.setScalar(1+k*len);g.add(m)}return g}
+const G=new THREE.Group();G.scale.setScalar(.95);S.add(G);const B=new THREE.Group();G.add(B);
+// Bean body that sits flat, stubby arms and feet
+const body=new THREE.SphereGeometry(1,64,40),p=body.attributes.position;
+for(let i=0;i<p.count;i++){let y=p.getY(i);if(y<-.55)y=-.55+(y+.55)*.35;p.setXYZ(i,p.getX(i)*1.06,y*.95,p.getZ(i)*.98)}body.computeVertexNormals();
+B.add(plush(body,.05,18));const nub=new THREE.SphereGeometry(.24,24,16),arms=[];
+[-1,1].forEach(s=>{const a=plush(nub,.18,10);a.scale.set(.8,1.1,.8);a.position.set(1*s,-.2,.25);a.rotation.z=-.5*s;B.add(a);arms.push(a);
+const f=plush(nub,.18,10);f.scale.set(1,.7,1.25);f.position.set(.42*s,-.64,.55);B.add(f)});
+// Embroidered face: bead eyes, stitched mouth, felt cheeks
+const face=new THREE.Group();face.position.z=.05;B.add(face);const eyes=[];
+[-1,1].forEach(s=>{const e=new THREE.Mesh(new THREE.SphereGeometry(.075,20,14),new THREE.MeshStandardMaterial({color:0x221a2b,roughness:.15}));e.position.set(.27*s,.12,.97);face.add(e);eyes.push(e);
+const h=new THREE.Mesh(new THREE.SphereGeometry(.02,8,6),new THREE.MeshBasicMaterial({color:0xffffff}));h.position.set(.025,.03,.06);e.add(h);
+const b=new THREE.Mesh(new THREE.CircleGeometry(.11,24),new THREE.MeshBasicMaterial({color:0xe0779f,transparent:true,opacity:.4}));b.position.set(.48*s,-.04,.93);b.rotation.y=.5*s;face.add(b)});
+const mouth=new THREE.Mesh(new THREE.TorusGeometry(.07,.016,8,20,Math.PI),matte(0x3b2a35));mouth.position.set(0,-.04,1.02);mouth.rotation.z=Math.PI;face.add(mouth);
+// Felt sprout grows each level
+const sprout=new THREE.Group(),felt=matte(0x9cc9a6);sprout.position.y=.98;B.add(sprout);
+const stem=new THREE.Mesh(new THREE.CylinderGeometry(.04,.05,.36,8),felt);stem.position.y=.18;sprout.add(stem);
+[-1,1].forEach(s=>{const l=new THREE.Mesh(new THREE.SphereGeometry(.18,16,12),felt);l.scale.set(1,.3,.62);l.position.set(.17*s,.38,0);l.rotation.z=.45*s;sprout.add(l)});
+// Floating candy confetti behind, and bursts on good answers
+const deco=[],ico=new THREE.IcosahedronGeometry(.13),tor=new THREE.TorusGeometry(.12,.05,8,16);
+for(let i=0;i<14;i++){const m=new THREE.Mesh(i%2?tor:ico,COLS[i%5]),a=i/14*Math.PI*2;m.position.set(Math.cos(a)*3.4,Math.sin(a)*1.4,-1.5-Math.random());m.userData.s=.5+Math.random();S.add(m);deco.push(m)}
+const parts=[],bit=new THREE.IcosahedronGeometry(.07);
+function burst(n){for(let i=0;i<n;i++){const m=new THREE.Mesh(bit,COLS[i%5]);m.position.set(0,.3,.6);
+m.userData={v:new THREE.Vector3((Math.random()-.5)*.14,.05+Math.random()*.09,(Math.random()-.5)*.05),life:70};S.add(m);parts.push(m)}}
+let mood="sleepy",hop=0,shake=0,t=0,blink=0,grow=.3,growT=.3,px=0,py=0;
+addEventListener("pointermove",e=>{px=e.clientX/innerWidth*2-1;py=e.clientY/innerHeight*2-1});
+function size(){const w=cv.clientWidth,h=cv.clientHeight;R.setPixelRatio(Math.min(devicePixelRatio,2));R.setSize(w,h,false);C.aspect=w/h;C.updateProjectionMatrix()}
+new ResizeObserver(size).observe(cv);size();
+(function frame(){t+=calm?.005:.016;hop*=.94;shake*=.92;if(Math.random()<.006)blink=1;blink*=.82;
+const sq=Math.sin(t*1.6)*.025-Math.sin(hop*Math.PI)*.06;B.scale.set(1+sq,1-sq,1+sq);
+G.position.y=(mood==="sleepy"?-.1:0)+Math.sin(hop*Math.PI)*.55;G.position.x=Math.sin(t*45)*.15*shake;
+G.rotation.y+=(px*.35-G.rotation.y)*.06;G.rotation.x+=(py*.12-G.rotation.x)*.06;G.rotation.z=mood==="sleepy"?.18:Math.sin(t*.8)*.03;
+const ey=mood==="sleepy"?.15:blink>.3?.15:1;eyes.forEach(e=>e.scale.y+=(ey-e.scale.y)*.4);
+mouth.rotation.z+=((mood==="sad"?0:Math.PI)-mouth.rotation.z)*.15;mouth.scale.setScalar(mood==="sleepy"?.6:mood==="party"?1.4:1);
+const up=mood==="party"||hop>.2;arms.forEach((a,i)=>{const s=i?-1:1;a.rotation.z+=(s*(up?-1:.5)-a.rotation.z)*.2;a.position.y+=((up?.15:-.2)-a.position.y)*.2});
+grow+=(growT-grow)*.05;sprout.scale.setScalar(grow);sprout.rotation.z=Math.sin(t*1.8)*.08;
+deco.forEach((m,i)=>{m.rotation.x+=.01*m.userData.s;m.rotation.y+=.013*m.userData.s;m.position.y+=Math.sin(t*m.userData.s+i)*.002});
+for(let i=parts.length-1;i>=0;i--){const m=parts[i],u=m.userData;m.position.add(u.v);u.v.y-=.004;m.rotation.x+=.2;if(--u.life<=0){S.remove(m);parts.splice(i,1)}}
+R.render(S,C);requestAnimationFrame(frame)})();
+return{mood(m){mood=m;if(m==="happy"||m==="party"){hop=1;burst(m==="party"?36:10)}if(m==="sad")shake=1},burst,grow(v){growT=v}}})();
+
+// ---------- Game: every task is a CAPTCHA-style dialog ----------
+const ICONS={
+star:["#ffc61a",'<polygon points="12,2 15,9 22,9.5 16.5,14.5 18.5,21.5 12,17.5 5.5,21.5 7.5,14.5 2,9.5 9,9"/>'],
+heart:["#ff4f9e",'<path d="M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z"/>'],
+moon:["#9b5de5",'<path d="M15 3a9 9 0 1 0 6 15A8 8 0 0 1 15 3z"/>'],
+cloud:["#8ecbff",'<path d="M7 18h10a4 4 0 0 0 0-8 5.5 5.5 0 0 0-10.6 1.5A3.3 3.3 0 0 0 7 18z"/>'],
+drop:["#3a86ff",'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>'],
+leaf:["#1fb87c",'<path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z"/><path d="M5 19l9-9" fill="none"/>'],
+bolt:["#f77f00",'<polygon points="13,2 4,14 11,14 10,22 20,9 13,9"/>'],
+ball:["#e63946",'<circle cx="12" cy="12" r="8.5"/>'],
+box:["#5ee6b0",'<rect x="4" y="4" width="16" height="16" rx="3"/>'],
+cone:["#2ec4b6",'<polygon points="12,3 22,20 2,20"/>'],
+ghost:["#e4d7ff",'<path d="M5 21V11a7 7 0 0 1 14 0v10l-2.3-2-2.3 2-2.4-2-2.4 2-2.3-2z"/><circle cx="9.5" cy="11" r="1.3" fill="#2b2350"/><circle cx="14.5" cy="11" r="1.3" fill="#2b2350"/>'],
+gem:["#00bbf9",'<polygon points="12,2 21,12 12,22 3,12"/>']};
+const icon=k=>`<svg viewBox="0 0 24 24" fill="${ICONS[k][0]}" stroke="#2b2350" stroke-width="1.3" stroke-linejoin="round" aria-hidden="true">${ICONS[k][1]}</svg>`;
+const COLORS=[["RED","#e63946"],["BLUE","#3a86ff"],["GREEN","#1f9d55"],["YELLOW","#e0a800"],["PURPLE","#9b5de5"],["ORANGE","#f77f00"]];
+const YES=["Yes!","Big brain!","No cap!","So smart!","Ate that!"],OOPS=["Oops!","Brain lag…","My bad!","Next one!"];
+const LEVELS=3,FOCUS_Q=6,MATH_Q=3;
+const $=s=>document.getElementById(s),app=$("app");
+let lvl=1,S={},timer;
+const shuffle=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(v=>v[1]);
+const pick=(a,n)=>shuffle(a).slice(0,n),any=a=>a[Math.random()*a.length|0];
+const store=(k,v)=>{try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+// One shuffled deck of all 36 word/ink pairs, kept across sessions: no colour question repeats until all are used.
+function drawFocus(){let deck=store("brDeck");if(!Array.isArray(deck)||deck.length<FOCUS_Q)deck=shuffle([...Array(36).keys()]);
+const out=deck.splice(0,FOCUS_Q);store("brDeck",deck);return out.map(i=>[COLORS[i/6|0],COLORS[i%6]])}
+function say(t){const b=$("bubble");b.textContent=t;b.classList.remove("pop");void b.offsetWidth;b.classList.add("pop")}
+function step(n){$("steps").hidden=n<1||n>4;document.body.classList.toggle("playing",n>=1&&n<=4);[...$("steps").children].forEach((b,i)=>{b.className=i===n-1?"on":i<n-1?"done":""})}
+function view(h){app.innerHTML=h}
+const cols=n=>`style="grid-template-columns:repeat(${n},minmax(0,1fr))"`;
+function cap(top,big,body,foot){return `<div class="cap"><header><small>${top}</small><strong>${big}</strong></header>${body}<footer><span class="tag">Level ${lvl} / ${LEVELS}</span>${foot}</footer></div>`}
+function pips(res,n){return `<div class="pips">${Array.from({length:n},(_,i)=>`<i class="${res[i]===1?"r":res[i]===0?"w":""}"></i>`).join("")}</div>`}
+function countdown(sec,done){const t0=Date.now();clearInterval(timer);timer=setInterval(()=>{const left=sec-(Date.now()-t0)/1000,bar=app.querySelector(".bar i"),t=$("secs");
+if(bar)bar.style.width=Math.max(0,left/sec*100)+"%";if(t)t.textContent=Math.ceil(Math.max(0,left))+"s";if(left<=0){clearInterval(timer);done()}},100)}
+
+function home(){step(0);lvl=1;M.mood("sleepy");M.grow(.3);say("zzz… too much scrolling…");view(`<div class="card"><div class="how">
+<div><i style="background:var(--lemon);color:var(--ink)">1</i><strong>Remember</strong><small>Pictures and places</small></div>
+<div><i style="background:var(--pink)">2</i><strong>Focus</strong><small>Tap the ink colour</small></div>
+<div><i style="background:#5fa8ff">3</i><strong>Switch</strong><small>Do quick maths</small></div>
+<div><i style="background:var(--mint)">4</i><strong>Recall</strong><small>Find places and pictures</small></div></div>
+<button class="robot" onclick="human(this)"><span class="box" id="box"></span><span>I'm not a brainrot bot</span><small>Brain-CAPTCHA<br>Tap to start</small></button></div>`)}
+function human(b){b.disabled=true;$("box").className="box spin";setTimeout(()=>{$("box").className="box ok";$("box").textContent="✓";M.mood("happy");say("Human confirmed!");setTimeout(start,700)},900)}
+
+function start(){const k=lvl<3?3:4,n=2+lvl;S={k,n,cells:pick([...Array(k*k).keys()],n),pics:pick(Object.keys(ICONS),n),focus:drawFocus(),fr:[],ms:0,mr:[]};
+step(1);M.mood("idle");M.grow(.3+.25*(lvl-1));say("Pictures AND places!");
+view(cap("Remember","the pictures and where they are",`<div class="tiles" ${cols(k)}>${Array.from({length:k*k},(_,i)=>{const j=S.cells.indexOf(i);return `<div class="tile">${j<0?"":icon(S.pics[j])}</div>`}).join("")}</div>`,
+`<div class="bar"><i style="width:100%"></i></div><span class="tag" id="secs"></span>`));countdown(5+n,nextFocus)}
+
+function nextFocus(){step(2);const i=S.fr.length;if(i>=FOCUS_Q)return nextMath();if(!i){M.mood("idle");say("Colour, not the word!")}
+const [word,ink]=S.focus[i];S.ans=ink[0];S.t=Date.now();
+view(cap(`Focus · ${i+1} / ${FOCUS_Q}`,"the INK colour of this word",`<div class="big" style="color:${ink[1]}">${word[0]}</div>
+<div class="tiles" ${cols(3)}>${COLORS.map(c=>`<button class="opt" onclick="focusAns(this,'${c[0]}')"><span class="dot" style="background:${c[1]}"></span>${c[0].toLowerCase()}</button>`).join("")}</div>`,pips(S.fr,FOCUS_Q)))}
+function focusAns(b,c){const ok=c===S.ans;S.ms+=Date.now()-S.t;S.fr.push(ok?1:0);react(b,ok);setTimeout(nextFocus,450)}
+
+function nextMath(){step(3);const i=S.mr.length;if(i>=MATH_Q)return recallWhere();if(!i){M.mood("idle");say("Switch! Quick maths!")}
+const a=2+(Math.random()*8|0),b=2+(Math.random()*8|0),r=a+b;S.ans=r;
+view(cap(`Switch · ${i+1} / ${MATH_Q}`,"the right answer",`<div class="big">${a} + ${b} = ?</div>
+<div class="tiles" ${cols(2)}>${shuffle([r,r+1,r-1,r+2]).map(o=>`<button class="opt" onclick="mathAns(this,${o})">${o}</button>`).join("")}</div>`,pips(S.mr,MATH_Q)))}
+function mathAns(b,o){const ok=o===S.ans;S.mr.push(ok?1:0);react(b,ok);setTimeout(nextMath,450)}
+function react(b,ok){app.querySelectorAll(".tiles button").forEach(x=>x.disabled=true);b.classList.add(ok?"right":"wrong");M.mood(ok?"happy":"sad");say(any(ok?YES:OOPS))}
+
+const verify=fn=>`<span class="tag"><span id="picked">0</span> / ${S.n}</span><button class="go" id="check" disabled onclick="${fn}()">Verify</button>`;
+function recallWhere(){step(4);M.mood("idle");say("Where were they?");
+view(cap("Recall 1 of 2","all squares that had a picture",`<div class="tiles" ${cols(S.k)}>${Array.from({length:S.k*S.k},(_,i)=>`<button class="tile" data-v="${i}" aria-label="square ${i+1}" onclick="toggle(this)"></button>`).join("")}</div>`,verify("checkWhere")))}
+function recallWhat(){M.mood("idle");say("What did you see?");const opts=shuffle([...S.pics,...pick(Object.keys(ICONS).filter(k=>!S.pics.includes(k)),9-S.n)]);
+view(cap("Recall 2 of 2","all pictures you saw",`<div class="tiles" ${cols(3)}>${opts.map(k=>`<button class="tile" data-v="${k}" aria-label="${k}" onclick="toggle(this)">${icon(k)}</button>`).join("")}</div>`,verify("checkWhat")))}
+function toggle(b){if(!b.classList.contains("sel")&&app.querySelectorAll(".tiles .sel").length>=S.n)return;
+b.classList.toggle("sel");const c=app.querySelectorAll(".tiles .sel").length;$("picked").textContent=c;$("check").disabled=c!==S.n}
+function mark(isSeen){let hit=0;app.querySelectorAll(".tiles button").forEach(b=>{const seen=isSeen(b.dataset.v),sel=b.classList.contains("sel");
+if(sel&&seen)hit++;b.disabled=true;const c=sel?(seen?"right":"wrong"):seen?"miss":"";if(c)b.classList.add(c)});$("check").disabled=true;
+const ok=hit===S.n;M.mood(ok?"happy":"sad");say(ok?any(YES):`${hit} of ${S.n} right`);return hit/S.n}
+function checkWhere(){S.where=mark(v=>S.cells.includes(+v));setTimeout(recallWhat,1200)}
+function checkWhat(){S.what=mark(v=>S.pics.includes(v));setTimeout(results,1200)}
+
+function results(){const where=Math.round(S.where*100),what=Math.round(S.what*100),foc=Math.round(S.fr.filter(Boolean).length/FOCUS_Q*100),good=(where+what)/2>=60,last=lvl>=LEVELS;
+M.mood(good?"party":"sad");say(good?any(YES):"Say it in your head!");
+view(`<div class="card"><h2>Level ${lvl} done!</h2><div class="stats"><div><strong>${where}%</strong><small>Where</small></div><div><strong>${what}%</strong><small>What</small></div><div><strong>${foc}%</strong><small>Focus</small></div></div>
+${good?"":'<p class="mute">Tip: name each picture and its place in your head, like "star, top left".</p>'}
+<button class="go" onclick="${last?"thanks()":"lvl++;start()"}">${last?"Finish":`Level ${lvl+1} →`}</button></div>`)}
+
+function thanks(){step(5);M.mood("party");M.grow(1.1);say("Brain: fully awake!");view(`<div class="card"><h2>Done! Your brain is awake.</h2>
+<p>3 levels is enough for today. Use this focus now.</p>
+<ul><li>Rest your eyes for 1 minute</li><li>Drink some water</li><li>Start one real task, phone away</li><li>Come back tomorrow</li></ul>
+<button onclick="home()">Back to start</button></div>`)}
+home();
+</script>
+</body>
+</html>
