@@ -204,7 +204,7 @@ function home(){step(0);lvl=1;M.mood("sleepy");M.grow(.3);say("zzz… too much s
 function human(b){b.disabled=true;$("box").className="box spin";setTimeout(()=>{$("box").className="box ok";$("box").textContent="✓";M.mood("happy");say("Human confirmed!");setTimeout(start,700)},900)}
 
 function start(){const k=lvl<3?3:4,n=2+lvl;S={k,n,cells:pick([...Array(k*k).keys()],n),pics:pick(Object.keys(ICONS),n),focus:drawFocus(),fr:[],ms:0,mr:[]};
-step(1);M.mood("idle");M.grow(.3+.25*(lvl-1));say("Pictures AND places!");
+step(1);M.mood("idle");M.grow(.3+.12*(lvl-1));say("Pictures AND places!");
 view(cap("Remember","the pictures and where they are",`<div class="tiles" ${cols(k)}>${Array.from({length:k*k},(_,i)=>{const j=S.cells.indexOf(i);return `<div class="tile">${j<0?"":icon(S.pics[j])}</div>`}).join("")}</div>`,
 `<div class="bar"><i style="width:100%"></i></div><span class="tag" id="secs"></span>`));countdown(5+n,nextFocus)}
 
@@ -240,7 +240,7 @@ view(`<div class="card"><h2>Level ${lvl} done!</h2><div class="stats"><div><stro
 ${good?"":'<p class="mute">Tip: name each picture and its place in your head, like "star, top left".</p>'}
 <button class="go" onclick="${last?"thanks()":"lvl++;start()"}">${last?"Finish":`Level ${lvl+1} →`}</button></div>`)}
 
-function thanks(){step(5);M.mood("party");M.grow(1.1);say("Brain: fully awake!");view(`<div class="card"><h2>Done! Your brain is awake.</h2>
+function thanks(){step(5);M.mood("party");M.grow(.55);setTimeout(()=>M.mood("idle"),1600);say("Brain: fully awake!");view(`<div class="card"><h2>Done! Your brain is awake.</h2>
 <p>3 levels is enough for today. Use this focus now.</p>
 <ul><li>Rest your eyes for 1 minute</li><li>Drink some water</li><li>Start one real task, phone away</li><li>Come back tomorrow</li></ul>
 <button onclick="home()">Back to start</button></div>`)}
